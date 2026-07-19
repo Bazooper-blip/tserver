@@ -1,0 +1,23 @@
+name: Tribute Game Server
+version: "0.2.0"
+slug: tribute_server
+description: Self-hosted Tribute server + web client
+url: https://github.com/Bazooper-blip/tribute-addon
+image: ghcr.io/bazooper-blip/tribute-server-{arch}
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: application
+boot: auto
+ports:
+  8080/tcp: 8080
+  9080/tcp: 9080
+ports_description:
+  8080/tcp: Web client + wss proxy (tunnel target)
+  9080/tcp: Raw game WebSocket (LAN / native)
+watchdog: tcp://[HOST]:[PORT:9080]
+options:
+  passphrase: ""
+schema:
+  passphrase: password?
