@@ -1,22 +1,50 @@
+# Home Assistant local add-on manifest for the Tribute game server (docs/07 §7).
+# Drop this folder into /addons/tribute_server on your HA Green, then:
+#   Settings → Add-ons → Add-on Store → ⋮ → Check for updates → Local add-ons.
 name: Tribute Game Server
 version: "0.2.1"
 slug: tribute_server
-description: Self-hosted Tribute server + web client
-url: https://github.com/Bazooper-blip/tribute-addon
+description: >-
+  Self-hosted authoritative server for online Tribute matches with friends
+  (presence lobby, redacted views, WebSocket transport).
+url: https://github.com/Bazooper-blip/tserver
+
+# Pull the prebuilt image published by .github/workflows/publish-addon-image.yml
+# (built per-arch, PUBLIC on GHCR — the source repo can stay private). Supervisor
+# substitutes {arch} and pulls tag == the `version` above, so bump `version` and
+# re-run the workflow to ship an update. Remove this line to build locally from
+# the Dockerfile instead. NOTE: the GHCR owner is your lowercased GitHub name.
 image: ghcr.io/bazooper-blip/tribute-server-{arch}
+
+# The HA Green is ARM64 (quad Cortex-A55); amd64 is here so you can also test
+# the add-on on a PC. Each maps to a Debian base image in build.yaml — Godot's
+# official Linux binaries are glibc-linked and will NOT run on the Alpine base.
 arch:
   - aarch64
   - amd64
+
+# s6-overlay v3 pattern: our CMD (run.sh) is the service. See Dockerfile.
 init: false
 startup: application
 boot: auto
+
+# Two ports. Point your Cloudflare Tunnel ingress for tribute.sammys.me at
+# http://<green-ip>:8080 — nginx there serves the web client at / and proxies
+# the game socket at /net (so browsers get one https/wss origin). 9080 is the
+# raw game socket, handy for native/LAN clients (ws://<green-ip>:9080). docs/07 §7.
 ports:
   8080/tcp: 8080
   9080/tcp: 9080
 ports_description:
-  8080/tcp: Web client + wss proxy (tunnel target)
-  9080/tcp: Raw game WebSocket (LAN / native)
+  8080/tcp: Web client + wss proxy (Cloudflare Tunnel target)
+  9080/tcp: Raw game WebSocket (LAN / native clients)
+
+# Restart the add-on if the game server stops accepting connections.
 watchdog: tcp://[HOST]:[PORT:9080]
+
+# User-facing options (Configuration tab). Leave the passphrase empty to run
+# ungated (e.g. when the endpoint is already protected by Cloudflare Access);
+# set it to require friends to enter a shared secret in the client (docs/07 §9).
 options:
   passphrase: ""
 schema:
