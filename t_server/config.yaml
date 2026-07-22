@@ -2,7 +2,7 @@
 # Drop this folder into /addons/tribute_server on your HA Green, then:
 #   Settings → Add-ons → Add-on Store → ⋮ → Check for updates → Local add-ons.
 name: Tribute Game Server
-version: "0.2.18"
+version: "0.2.19"
 slug: tribute_server
 description: >-
   Self-hosted authoritative server for online Tribute matches with friends
